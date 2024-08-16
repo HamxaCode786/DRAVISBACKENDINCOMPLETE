@@ -927,18 +927,43 @@ exports.getsearchseller = [
           }
         }
       }
-      // Log the constructed query for debugging
-      console.log('Constructed Query:', query);
-      // Fetch matching posts from the database
-      const results = await post.find(query);
-      // Log the results for debugging
-      console.log('Search Results:', results);
-      res.json({ message: 'Search results fetched successfully', data: results });
-    } catch (err) {
-      console.error('Error in search request:', err); // Log error for debugging
-      next(err); // Pass error to the error handling middleware
-    }
-  }
-];
-
+       // Convert page and limit to integers
+       const pageNumber = parseInt(page, 10);
+       const pageSize = parseInt(limit, 5);
+ 
+       // Validate page and limit
+       if (isNaN(pageNumber) || pageNumber <= 0) {
+         return res.status(400).json({ message: 'Invalid page number' });
+       }
+       if (isNaN(pageSize) || pageSize <= 0) {
+         return res.status(400).json({ message: 'Invalid limit' });
+       }
+ 
+       // Calculate pagination parameters
+       const skip = (pageNumber - 1) * pageSize;
+       const results = await post.find(query).skip(skip).limit(pageSize);
+ 
+       // Count total results for pagination info
+       const totalResults = await post.countDocuments(query);
+ 
+       // Log the results for debugging
+       console.log('Search Results:', results);
+ 
+       // Respond with paginated results
+       res.json({
+         message: 'Search results fetched successfully',
+         data: results,
+         pagination: {
+           totalResults,
+           totalPages: Math.ceil(totalResults / pageSize),
+           currentPage: pageNumber,
+           pageSize
+         }
+       });
+     } catch (err) {
+       console.error('Error in search request:', err); // Log error for debugging
+       next(err); // Pass error to the error handling middleware
+     }
+   }
+ ];
 //search api seller list //
