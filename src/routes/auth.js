@@ -11,7 +11,7 @@ router.post('/forgot-password', authController.forgotPassword);
 // dashboard rest apis routes
 
 router.post('/post',authController.post);
-router.post('/updatepost/:id',authController.updatePost);
+router.post('/updateposts/:id',authController.updatePost);
 router.delete('/deletepost/:id',authController.deletePost);
 router.get('/getpost',authController.getpost);
 router.get('/getUsers',authController.getUsers);
@@ -21,5 +21,9 @@ router.get('/getcategory',authController.getcategory);
 router.get('/subscribers', authController.getSubscriberCount);
 router.post('/changepassword',authController.changePassword);
 router.get('/loginuser', authController.getuserpost);
+router.get('/updatepost/:id', authController.geteditdata);
+router.get('/seller', authController.getsearchseller);
+
+
 
 module.exports = router;

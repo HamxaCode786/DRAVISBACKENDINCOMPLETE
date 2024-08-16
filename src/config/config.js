@@ -11,7 +11,6 @@ module.exports = {
     jwtSecret: 'your_jwt_secret',
     emailUser: 's.amjad00123@gmail.com',
     emailPassword:'',
-    token:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InMuc2FAZ21haWwuY29tIiwidXNlcklkIjoiNjZhOWQ3MjgzYzQwMDI3MGY3MmZmY2Y3IiwiaWF0IjoxNzIzMjA0NzE0LCJleHAiOjE3MjMyMzcxMTR9.2JetQlELfb1CW7GNR4Qspq4FfOJnZcEYh41c4ymAL6w'
   };
 
 

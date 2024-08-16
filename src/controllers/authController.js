@@ -12,7 +12,8 @@ const multer = require('multer');
 const mongoose = require('mongoose');
 const path = require('path');
 const { google } = require('googleapis');
-// const verifyToken = require('../middleware/errorHandler');
+const { request } = require('express');
+//const verifyToken = require('../middleware/errorHandler');
 
 
 // Api for registering users.
@@ -64,133 +65,148 @@ exports.register = [
     }
   }
 ];
+
 // change password api //
-exports.changePassword = [
-  // Validation middleware
-  body('currentPassword').notEmpty().withMessage('Current password is required'),
-  body('newPassword').notEmpty().withMessage('New password must be at least 5 characters long'),
-  body('confirmNewPassword').custom((value, { req }) => {
-    if (value !== req.body.newPassword) {
-      throw new Error('New passwords do not match');
-    }
-    return true;
-  }).withMessage('New passwords must match. Please check your new password again'),
+// exports.changePassword = [
+//   verifyToken,
+//   // Validation middleware
+//   body('currentPassword').notEmpty().withMessage('Current password is required'),
+//   body('newPassword').notEmpty().withMessage('New password must be at least 5 characters long'),
+//   body('confirmNewPassword').custom((value, { req }) => {
+//     if (value !== req.body.newPassword) {
+//       throw new Error('New passwords do not match');
+//     }
+//     return true;
+//   }).withMessage('New passwords must match. Please check your new password again'),
 
-  // Change password function
-  async (req, res, next) => {
-    //console.log('req.user:', req.user); // Debugging line
+//   // Change password function
+//   async (req, res, next) => {
+//     //console.log('req.user:', req.user); // Debugging line
 
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       return res.status(400).json({ errors: errors.array() });
+//     }
 
-    const { currentPassword, newPassword } = req.body;
-    console.log(req.body);
-    const userId = req.user._id; // Use _id or adjust based on your User model
+//     const { currentPassword, newPassword } = req.body;
+//     console.log(req.body);
+//     const userId = req.user._id;
+//     console.log(userId);
+//      // Use _id or adjust based on your User model
+//     if (!userId) {
+//       return res.status(400).json({ errors: [{ msg: 'User ID not found' }] });
+//     }
 
-    if (!userId) {
-      return res.status(400).json({ errors: [{ msg: 'User ID not found' }] });
-    }
+//     try {
+//       // Find the user by ID
+//       const user = await users.findById(userId);
+//       console.log(user);
+//       if (!user) {
+//         return res.status(404).json({ errors: [{ msg: 'User not found' }] });
+//       }
 
-    try {
-      // Find the user by ID
-      const user = await users.findById(userId);
-      console.log(user);
-      if (!user) {
-        return res.status(404).json({ errors: [{ msg: 'User not found' }] });
-      }
+//       // Check if the current password is correct
+//       const isMatch = await bcrypt.compare(currentPassword, user.password);
+//       if (!isMatch) {
+//         return res.status(400).json({ errors: [{ msg: 'Current password is incorrect' }] });
+//       }
 
-      // Check if the current password is correct
-      const isMatch = await bcrypt.compare(currentPassword, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ errors: [{ msg: 'Current password is incorrect' }] });
-      }
+//       // Hash the new password
+//       const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-      // Hash the new password
-      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+//       // Update the user's password
+//       user.password = hashedNewPassword;
+//       await user.save();
 
-      // Update the user's password
-      user.password = hashedNewPassword;
-      await user.save();
-
-      res.json({ message: 'Password changed successfully' });
-    } catch (err) {
-      return next(err);
-    }
-  }
+//       res.json({ message: 'Password changed successfully' });
+//     } catch (err) {
+//       return next(err);
+//     }
+//   }
 
 
 
-];// change password api //
+// ];// change password api //
 
-//AUTH MIDDLEWARE //
-const authMiddleware = async (req, res, next) => {
-  try {
-      const token = req.header('Authorization').replace('Bearer ', '');
-      if (!token) {
-          return res.status(401).json({ message: 'No token provided' });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await user.findById(decoded.id);
-      if (!user) {
-          return res.status(404).json({ message: 'User not found' });
-      }
-
-      req.user = user; // Attach the user object to the request
-      next();
-  } catch (err) {
-      console.error(err);
-      res.status(401).json({ message: 'Unauthorized' });
-  }
-};
-//AUTH MIDDLEWARE //
 
 // Api for login in to dashboard
 
+// exports.login = [
+//   // Validation middleware
+//   body('email').isEmail().withMessage('Valid email is required'),
+//   body('password').notEmpty().withMessage('Password is required'),
+
+  // Login function
+//   async (req, res, next) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       return res.status(400).json({ errors: errors.array() });
+//     }
+
+//     const { email, password } = req.body;
+
+//     try {
+//       // Find user by email
+//       const user = await users.findOne({ email });
+
+//       if (!user) {
+//         return res.status(404).json({ error: 'User not found' });
+//       }
+
+//       // Check password
+//       const isMatch = await bcrypt.compare(password, user.password);
+//       if (!isMatch) {
+//         return res.status(401).json({ error: 'Invalid credentials' });
+//       }
+
+//       //Generate JWT token
+//       const token = jwt.sign(
+//         { email: user.email, userId: user._id },
+//         config.jwtSecret,
+//         { expiresIn: '9h' }
+//       );
+//       // const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '9h' });
+
+//       res.json({ token });
+//     } catch (err) {
+//       return next(err);
+//     }
+//   }
+// ];
 exports.login = [
   // Validation middleware
   body('email').isEmail().withMessage('Valid email is required'),
   body('password').notEmpty().withMessage('Password is required'),
-
   // Login function
   async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-
     const { email, password } = req.body;
-
     try {
       // Find user by email
       const user = await users.findOne({ email });
-
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
-
       // Check password
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
-
       // Generate JWT token
       const token = jwt.sign(
         { email: user.email, userId: user._id },
         config.jwtSecret,
         { expiresIn: '9h' }
       );
-
       res.json({ token });
     } catch (err) {
       return next(err);
     }
   }
 ];
-
 // Api to send email for password reset
 
 exports.forgotPassword = [
@@ -414,7 +430,7 @@ function verifyToken(req, res, next) {
 // Middleware for handling file uploads
 exports.post = [
 
-  // verifyToken,
+  verifyToken,
   
   // Middleware for handling file uploads
   upload.array('images', 10), // Adjust 'images' to your field name and 10 to the number of files you want to allow
@@ -435,22 +451,26 @@ exports.post = [
   body('subject').notEmpty().withMessage('Subject is required').isString().withMessage('Subject must be a string'),
   body('expense').notEmpty().withMessage('Expense is required').isNumeric().withMessage('Expense must be a number'),
   async (req, res, next) => {
+    console.log(req.user);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
     const { title, price, categoryId, description, pinExpiryDate, transactions, income, subject, expense } = req.body;
     const images = req.files ? req.files.map(file => file.filename) : [];
+    const authenticatedUserId = req.user.userId;
+    console.log(authenticatedUserId);
     try {
       const fetchedCategoryId = categoryId || await getDefaultCategoryId();
-      const fetchedUserId = await getDefaultUserId();
+      //const fetchedUserId = await getDefaultUserId();
       const fetchedStatus = await determineDefaultStatus();
+  
 
       const newPost = new post({
         title,
         price,
         status: fetchedStatus,
-        userId: fetchedUserId,
+        userId: authenticatedUserId,
         categoryId: fetchedCategoryId,
         description,
         images,
@@ -477,13 +497,6 @@ async function getDefaultCategoryId() {
   return defaultCategory ? defaultCategory._id : null;
 }
 
-async function getDefaultUserId() {
-  // Fetch or return default user ID
-  const defaultUser = await users.findOne(); // Adjust query as necessary
-  console.log(defaultUser);
-  
-  return defaultUser ? defaultUser._id : null;
-}
 
 
 async function determineDefaultStatus() {
@@ -491,7 +504,7 @@ async function determineDefaultStatus() {
   // Determine or return default status
   return 'inactive'; // Default status example
 }
-
+// post second api testing//
 
 // Update a post
 exports.updatePost = [
@@ -503,7 +516,6 @@ exports.updatePost = [
   body('price').optional().notEmpty().isNumeric().withMessage('Price must be a number'),
   body('status').optional().isIn(['active', 'sold', 'inactive']).withMessage('Status must be one of the following: active, sold, inactive'),
   body('description').optional().isString().withMessage('Description must be a string'),
-  body('images').optional().isArray().withMessage('Images must be an array of strings'),
   body('isPinned').optional().isBoolean().withMessage('IsPinned must be a boolean'),
   body('pinExpiryDate').optional().isISO8601().withMessage('Invalid pin expiry date format'),
   body('transactions').optional().isArray().withMessage('Transactions must be an array').custom((value) => {
@@ -534,7 +546,7 @@ exports.updatePost = [
     try {
       // Fetch or set default values for categoryId, userId if not provided
       const fetchedCategoryId = await getDefaultCategoryId(); // Fetch default category ID if not provided
-      const fetchedUserId = await getDefaultUserId(); // Fetch default user ID if not provided
+      //const fetchedUserId = await getDefaultUserId(); // Fetch default user ID if not provided
       const fetchedStatus = status || await determineDefaultStatus(); // Use provided status or default
 
       // Update the post document
@@ -543,7 +555,7 @@ exports.updatePost = [
         price,
         status: fetchedStatus,
         categoryId: fetchedCategoryId,
-        userId: fetchedUserId,
+        //userId: fetchedUserId,
         description,
         images: images.length ? images : undefined, // Only include if images exist
         isPinned,
@@ -571,23 +583,18 @@ exports.updatePost = [
 
 exports.deletePost = [
   verifyToken, // Ensure user is authenticated
-
   async (req, res, next) => {
-    const { id } = req.body;
-
+    const { id } = req.params;
     // Check if the id is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid ID format' });
     }
-
     try {
       // Find and delete the post by ID
       const deletedPost = await post.findByIdAndDelete(id);
-
       if (!deletedPost) {
         return res.status(404).json({ message: 'Post not found' });
       }
-
       res.json({ message: 'Post deleted successfully' });
     } catch (err) {
       console.error(err); // Log the error for debugging
@@ -595,8 +602,6 @@ exports.deletePost = [
     }
   }
 ];
-
-
 
 // APi to retrieve all posts has been created
 
@@ -753,10 +758,10 @@ exports.getSubscriberCount = [
 
 exports.getuserpost = [
   verifyToken,
-  // Middleware function to handle GET requests for user posts
   async (req, res, next) => {
+    console.log(req.user);
     try {
-      const userId = req.user && req.user.userId; // Safely get the user ID
+      const userId = req.user.userId; // Safely get the user ID
 
       if (!userId) {
         return res.status(400).json({ message: 'User ID not found' });
@@ -764,8 +769,18 @@ exports.getuserpost = [
 
       console.log(`Fetching posts for user ID: ${userId}`);
 
-      // Fetch posts by the user ID
-      const posts = await post.find({ userId }).exec(); // Ensure the query is executed
+      // Get pagination parameters from the query string
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 5;
+      const skip = (page - 1) * limit;
+
+      // Fetch posts by the user ID with pagination
+      const posts = await post.find({ userId })
+        .skip(skip)
+        .limit(limit)
+        .exec(); // Ensure the query is executed
+
+      const totalPosts = await post.countDocuments({ userId });
 
       console.log(`Posts found: ${posts.length}`);
 
@@ -774,7 +789,13 @@ exports.getuserpost = [
         return res.status(404).json({ message: 'No posts found for this user' });
       }
 
-      res.json(posts);
+      // Return paginated posts with metadata
+      res.json({
+        totalPosts,
+        totalPages: Math.ceil(totalPosts / limit),
+        currentPage: page,
+        posts,
+      });
     } catch (error) {
       console.error('Error fetching posts:', error);
       res.status(500).json({ message: 'Server error' });
@@ -783,3 +804,141 @@ exports.getuserpost = [
 ];
 
 //user only posts for my add page //
+//form update get//
+exports.geteditdata = [
+  verifyToken, // Verify the token before proceeding
+  async (req, res) => {
+    try {
+      // Log the request ID for debugging
+      const { id } = req.params.id;
+      
+      console.log('Fetching post with ID:', req.params.id);
+
+      // Fetch the post by ID
+      const posts = await post.findById(req.params.id); // Ensure 'Post' is correctly initialized
+       
+      console.log(posts);
+
+      if (!posts) {
+        return res.status(404).json({ message: 'Post not found' });
+      }
+
+      // Send the post data as response
+      res.json(posts);
+    } catch (error) {
+      // Log the error for debugging
+      console.error('Server error:', error);
+      // console.log(post)
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+];
+//retry practice//
+
+// change password api //
+exports.changePassword = [
+  verifyToken,
+  // Validation middleware
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
+  body('password').isLength({ min: 8 }).withMessage('New password must be at least 8 characters long'),
+  body('confirmPassword').custom((value, { req }) => {
+    if (value !== req.body.password) {
+      throw new Error('Confirm password does not match new password');
+    }
+    return true;
+  }),
+  // Change password function
+  async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    const { currentPassword, password } = req.body;
+    const userId = req.user.userId; // Assuming user ID is stored in req.user after authentication
+    console.log(userId);
+    try {
+      // Find user by ID
+      const user = await users.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      // Check if the current password is correct
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Current password is incorrect' });
+      }
+      // Hash the new password and update
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+      await user.save();
+      res.json({ message: 'Password updated successfully' });
+    } catch (err) {
+      return next(err);
+    }
+  }
+];
+// search api seller list //
+exports.getsearchseller = [
+  verifyToken,
+  async (req, res, next) => {
+    try {
+      const {
+        subscriberFrom,
+        subscriberTo,
+        priceFrom,
+        priceTo,
+        network,
+      } = req.query;
+      // Build the query object
+      const query = {};
+      // Network filter (case-insensitive search)
+      if (network) {
+        query.network = { $regex: new RegExp(network, 'i') }; // Case-insensitive regex search
+      }
+      // Subscriber count range filter
+      if (subscriberFrom && subscriberTo) {
+        query.subscriber = {}; // Initialize subscriberCount filter object
+        if (subscriberFrom) {
+          const subscriberFromNum = parseInt(subscriberFrom, 10);
+          if (!isNaN(subscriberFromNum)) {
+            query.subscriber.$gte = subscriberFromNum; // Greater than or equal to
+          }
+        }
+        if (subscriberTo) {
+          const subscriberToNum = parseInt(subscriberTo, 10);
+          if (!isNaN(subscriberToNum)) {
+            query.subscriber.$lte = subscriberToNum; // Less than or equal to
+          }
+        }
+      }
+      // Price range filter
+      if (priceFrom && priceTo) {
+        query.price = {}; // Initialize price filter object
+        if (priceFrom) {
+          const priceFromNum = parseFloat(priceFrom);
+          if (!isNaN(priceFromNum)) {
+            query.price.$gte = priceFromNum; // Greater than or equal to
+          }
+        }
+        if (priceTo) {
+          const priceToNum = parseFloat(priceTo);
+          if (!isNaN(priceToNum)) {
+            query.price.$lte = priceToNum; // Less than or equal to
+          }
+        }
+      }
+      // Log the constructed query for debugging
+      console.log('Constructed Query:', query);
+      // Fetch matching posts from the database
+      const results = await post.find(query);
+      // Log the results for debugging
+      console.log('Search Results:', results);
+      res.json({ message: 'Search results fetched successfully', data: results });
+    } catch (err) {
+      console.error('Error in search request:', err); // Log error for debugging
+      next(err); // Pass error to the error handling middleware
+    }
+  }
+];
+
+//search api seller list //
