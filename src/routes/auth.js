@@ -23,6 +23,8 @@ router.post('/changepassword',authController.changePassword);
 router.get('/loginuser', authController.getuserpost);
 router.get('/updatepost/:id', authController.geteditdata);
 router.get('/seller', authController.getsearchseller);
+router.post('/favorites', authController.favourites);
+router.get('/favoritesget', authController.getFavourites);
 
 
 

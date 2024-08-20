@@ -47,6 +47,11 @@ const userSchema = new Schema({
     type: Date,
     default: Date.now // Set default to current date if not provided
   },
+  favorites: {
+    type: [mongoose.Schema.Types.ObjectId], // Array of ObjectId types
+    ref: 'Post', // Reference to the Post model
+    default: [] // Initialize as an empty array
+  },
   ratings: [
     {
       ratingId: {

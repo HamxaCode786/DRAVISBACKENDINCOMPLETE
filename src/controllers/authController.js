@@ -13,6 +13,8 @@ const mongoose = require('mongoose');
 const path = require('path');
 const { google } = require('googleapis');
 const { request } = require('express');
+const Post = require('../models/post');
+const User = require('../models/users');
 //const verifyToken = require('../middleware/errorHandler');
 
 
@@ -927,6 +929,13 @@ exports.getsearchseller = [
           }
         }
       }
+
+      const page = parseInt(req.query.page, 10) || 1; // Default to 1 if not provided
+    const limit = parseInt(req.query.limit, 10) || 10; // Default to 10 if not provided
+
+    // Example of using `page` and `limit` to paginate results
+    const offset = (page - 1) * limit;
+
        // Convert page and limit to integers
        const pageNumber = parseInt(page, 10);
        const pageSize = parseInt(limit, 5);
@@ -967,3 +976,88 @@ exports.getsearchseller = [
    }
  ];
 //search api seller list //
+
+// favorites api listing post //
+exports.favourites = [
+  verifyToken,
+  async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      // console.log(userId);
+      const postId = req.body.postId; // Ensure postId is passed in the request body
+      // console.log(postId);
+      // Check if the user exists
+      const user = await User.findById(userId);
+      console.log(user);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      // Check if the post exists
+      const post = await Post.findById(postId);
+      if (!post) {
+        return res.status(404).json({ message: 'Post not found' });
+      }
+      // Add post to user's favorites if it's not already there
+      if (!user.favorites.includes(postId)) {
+        user.favorites.push(postId);
+        await user.save();
+      }
+      res.status(200).json({ message: 'Post added to favorites', favorites: user.favorites });
+    } catch (error) {
+      console.error('Error saving to favorites:', error.message);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+];
+
+
+exports.getFavourites = [
+  verifyToken,
+  async (req, res) => {
+    try {
+      const userId = req.user.userId;
+
+      // Check if the user exists
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Retrieve the postIds from user's favorites
+      const favoritePostIds = user.favorites;
+
+      // Get pagination parameters from the query string
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 5;
+      const skip = (page - 1) * limit;
+
+      // Fetch all posts that are in the favorites array with pagination
+      const posts = await Post.find({ _id: { $in: favoritePostIds } })
+        .skip(skip)
+        .limit(limit)
+        .exec();
+
+      // Get the total number of favorite posts
+      const totalFavorites = await Post.countDocuments({ _id: { $in: favoritePostIds } });
+
+      console.log(`Favorites found: ${posts.length}`);
+
+      if (posts.length === 0) {
+        console.log(`No favorites found for user ID: ${userId}`);
+        return res.status(404).json({ message: 'No favorites found for this user' });
+      }
+
+      // Return paginated favorites with metadata
+      res.status(200).json({
+        totalFavorites,
+        totalPages: Math.ceil(totalFavorites / limit),
+        currentPage: page,
+        favorites: posts,
+      });
+
+    } catch (error) {
+      console.error('Error fetching favorites:', error.message);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+];
