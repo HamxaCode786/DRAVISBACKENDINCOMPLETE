@@ -25,6 +25,8 @@ router.get('/updatepost/:id', authController.geteditdata);
 router.get('/seller', authController.getsearchseller);
 router.post('/favorites', authController.favourites);
 router.get('/favoritesget', authController.getFavourites);
+router.get('/usermeapi', authController.userprofile);
+
 
 
 

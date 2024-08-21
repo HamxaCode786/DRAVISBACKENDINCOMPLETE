@@ -359,16 +359,24 @@ exports.forgotPassword = [
 //   }
 // });
 
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, 'uploads/');
+//   },
+//   filename: function (req, file, cb) {
+//     cb(null, file.originalname);
+//   }
+// });
+// const upload = multer({ storage: storage });
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/');
+    cb(null, 'uploads/'); // Destination folder
   },
   filename: function (req, file, cb) {
-    cb(null, file.originalname);
+    cb(null, Date.now() + path.extname(file.originalname)); // File naming
   }
 });
 const upload = multer({ storage: storage });
-
 // const upload = multer({
 //   storage,
 //   fileFilter: (req, file, cb) => {
@@ -387,17 +395,7 @@ const upload = multer({ storage: storage });
 
 
 
-// function verifyToken(req, res, next) {
-// const token = req.header('Authorization');
-// if (!token) return res.status(401).json({ error: 'Access denied' });
-// try {
-//  const decoded = jwt.verify(token, 'your-secret-key');
-//  req.userId = decoded.userId;
-//  next();
-//  } catch (error) {
-//  res.status(401).json({ error: 'Invalid token' });
-//  }
-//  };
+
 
 function verifyToken(req, res, next) {
   const authHeader = req.headers['authorization']; // Note: 'Authorization' should be lowercase 'authorization' in headers
@@ -415,21 +413,7 @@ function verifyToken(req, res, next) {
 }
 
 
-// function verifyToken(req, res, next){
-//   const bearerheaders = req.body['authorization'];
-//   next();
-//   if (typeof bearerheaders !=="undefined"){
-//     const bearer = bearerheaders.split("");
-//     const token = bearer[1];
-//     req.token=token;
-//     //next();
-//   }
-//   else{
-//     res.send="invalid token";
-//   }
 
-// }
-// Middleware for handling file uploads
 exports.post = [
 
   verifyToken,
@@ -616,7 +600,7 @@ exports.getpost = async (req, res, next) => {
   try {
     // Fetch form data from the MongoDB collection using Mongoose with pagination
     const forms = await post.find().skip(skip).limit(limit);
-
+console.log(forms);
     // Count total documents for pagination purposes
     const totalDocuments = await post.countDocuments();
 
@@ -1061,3 +1045,28 @@ exports.getFavourites = [
     }
   }
 ];
+
+// user me api //
+exports.userprofile = [
+  verifyToken,
+  // Middleware function to handle GET requests for user data
+  async (req, res, next) => {
+    try {
+      // Ensure req.userid is set by the verifyToken middleware
+      const userId = req.user.userId;
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID not found in request' });
+      }
+      // Fetch the user from the database using Mongoose
+      const user = await users.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      res.json({ message: 'User data fetched successfully', data: user });
+    } catch (err) {
+      console.error('Error in GET request:', err); // Log error for debugging
+      return next(err);
+    }
+  }
+];
+//user me api //

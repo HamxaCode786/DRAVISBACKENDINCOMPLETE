@@ -4,6 +4,7 @@ const User = require('./src/models/users');
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
+const path = require('path')
 
 const app = express();
 require('dotenv').config();
@@ -39,7 +40,7 @@ app.get('/', (req, res) => {
 
 app.use(express.json()); // For parsing application/json
 
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Start server
 const PORT = process.env.PORT;
 const api_key = process.env.api_key;
