@@ -746,6 +746,7 @@ exports.getuserpost = [
   verifyToken,
   async (req, res, next) => {
     console.log(req.user);
+    
     try {
       const userId = req.user.userId; // Safely get the user ID
 
